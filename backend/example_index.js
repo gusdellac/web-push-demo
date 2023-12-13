@@ -3,9 +3,12 @@ const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const webpush = require('web-push')
+const morgan = require('morgan')
+
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
+app.use(morgan("dev"))
 const port = 4000
 app.get('/', (req, res) => res.send('Hello World!'))
 const dummyDb = { subscription: null } //dummy in memory store
@@ -17,6 +20,7 @@ const saveToDatabase = async subscription => {
 // The new /save-subscription endpoint
 app.post('/save-subscription', async (req, res) => {
   const subscription = req.body
+  console.log(subscription)
   await saveToDatabase(subscription) //Method to save the subscription to Database
   res.json({ message: 'success' })
 })
@@ -38,8 +42,17 @@ const sendNotification = (subscription, dataToSend) => {
 //route to test send notification
 app.get('/send-notification', (req, res) => {
   const subscription = dummyDb.subscription //get subscription from your databse here.
+  const title = "Titulo notificacion"
   const message = 'Hello World'
-  sendNotification(subscription, message)
-  res.json({ message: 'message sent' })
+  const payload = JSON.stringify({
+    title: title,
+    message: message
+});
+  try {
+    sendNotification(subscription, payload)
+    res.sendStatus(200).json({ message: 'message sent' })
+  } catch (error) {
+
+  }
 })
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
